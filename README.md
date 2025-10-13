@@ -1,73 +1,49 @@
-# React + TypeScript + Vite
+# SF Meter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Chakra UI v3 を利用した SF テーマのメーターアプリです。  
+現在はフロントエンドの UI 領域のみを構築しており、トップにサイトタイトルを表示し、その下にテクノロジーごとのカードを並べる構成になっています。
 
-Currently, two official plugins are available:
+## 画面構成 (2025-02 時点)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 画面上部に `SF Meter` のヘッダーを固定表示。
+- 中央に技術カード (`TechCard`) を 1 件表示。  
+  - カードには名前・説明・実現度スコアを表示し、Chakra UI の `Progress` コンポーネント (namespace API) でメーターを描画。
+- 全体を暗色系の背景 & 角丸カードで統一。
 
-## React Compiler
+## 開発環境
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript + Vite
+- Chakra UI v3 (`@chakra-ui/react`), Emotion, Framer Motion
 
-## Expanding the ESLint configuration
+### セットアップ
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 開発サーバー
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+### ビルド
+
+```bash
+npm run build
+```
+
+*Node.js 22.11.0 でビルドすると Vite から警告が出るため、22.12 以上または 20.19 以上を推奨。*
+
+## 主なコンポーネント
+
+- `src/App.tsx`  
+  レイアウトとヘッダー表示を担当。`Flex` で縦並びレイアウトを構築し、中央に `TechCard` を配置。
+- `src/components/TechCard.tsx`  
+  テクノロジー情報を表示するカード。Progress コンポーネントの namespace API (`Progress.Root`, `Progress.Track`, `Progress.Range`) を使用。
+
+## 今後の TODO
+
+- 複数カードの一覧表示やデータ管理。
+- スコアのバリエーションや色分け設定。
+- Node.js バージョンの更新とビルドサイズ最適化。
