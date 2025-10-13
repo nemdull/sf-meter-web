@@ -1,6 +1,6 @@
 import { Box, Heading, Text, Stack, Progress } from '@chakra-ui/react'
 
-type Tech = {
+export type Tech = {
   id: number
   name: string
   description: string

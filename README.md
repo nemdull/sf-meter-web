@@ -35,11 +35,35 @@ npm run build
 
 *Node.js 22.11.0 でビルドすると Vite から警告が出るため、22.12 以上または 20.19 以上を推奨。*
 
+## ディレクトリ構成 (主要部分)
+
+```
+src/
+├─ app/
+│  └─ App.tsx              # グローバルなエントリーポイント
+├─ pages/
+│  └─ home/
+│     └─ HomePage.tsx      # トップページの UI とデータ
+├─ shared/
+│  └─ ui/
+│     └─ molecules/
+│        └─ tech-card/
+│           ├─ TechCard.tsx
+│           └─ index.ts
+└─ main.tsx                 # ReactDOM ルート & プロバイダー
+```
+
+Atomic Design の考え方に合わせて UI コンポーネントは `shared/ui/molecules` 配下に配置し、ページ単位の構造は `pages/home` にまとめています。`app` ディレクトリはアプリケーションの初期化やグローバルレイアウトを担当する層です。
+
+TypeScript / Vite のパスエイリアスとして `@/` を `src/` に割り当てています。（例: `import TechCard from '@/shared/ui/molecules/tech-card'`）
+
 ## 主なコンポーネント
 
-- `src/App.tsx`  
-  レイアウトとヘッダー表示を担当。`Flex` で縦並びレイアウトを構築し、中央に `TechCard` を配置。
-- `src/components/TechCard.tsx`  
+- `src/app/App.tsx`  
+  アプリ全体のエントリーポイントとして、ページを切り替える役割を担います。
+- `src/pages/home/HomePage.tsx`  
+  ヘッダーとメインエリアを構築し、ピックアップ技術カードを表示。
+- `src/shared/ui/molecules/tech-card/TechCard.tsx`  
   テクノロジー情報を表示するカード。Progress コンポーネントの namespace API (`Progress.Root`, `Progress.Track`, `Progress.Range`) を使用。
 
 ## 今後の TODO
