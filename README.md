@@ -6,9 +6,18 @@ Chakra UI v3 を利用した SF テーマのメーターアプリです。
 ## 画面構成 (2025-02 時点)
 
 - 画面上部に `SF Meter` のヘッダーを固定表示。
-- 中央に技術カード (`TechCard`) を 1 件表示。  
-  - カードには名前・説明・実現度スコアを表示し、Chakra UI の `Progress` コンポーネント (namespace API) でメーターを描画。
-- 全体を暗色系の背景 & 角丸カードで統一。
+- メインエリアは `Container` + `SimpleGrid` で構成し、技術カード (`TechCard`) を 1〜2 列にレスポンシブ表示。
+- データ取得中はスピナー、失敗時はシンプルなメッセージカード、件数 0 の場合はダッシュ枠のメッセージを表示。
+
+## フロントエンド構造のポイント
+
+- `src/pages/home/HomePage.tsx`  
+  - Chakra UI の `Flex` + `Container` でヘッダーとメインコンテンツを分離。  
+  - `SimpleGrid` によりカード列数を `1 → 2` とし、`Spinner` / エラーメッセージ / 空表示の 3 状態を制御。
+- `src/shared/ui/molecules/tech-card/TechCard.tsx`  
+  - シンプルなスタック構成でタイトル・説明・メーターを保持しつつ、スコア帯に応じて `Progress.Range` の色を変化させている。
+- `src/api.ts` + `src/types.ts`  
+  - API レイヤーは単純なフェッチ関数で構成し、`Tech` 型を共有。
 
 ## 開発環境
 
