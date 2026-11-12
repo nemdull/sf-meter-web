@@ -1,73 +1,92 @@
-# SF Meter
+# sf-meter-web
 
-Chakra UI v3 を利用した SF テーマのメーターアプリです。  
-現在はフロントエンドの UI 領域のみを構築しており、トップにサイトタイトルを表示し、その下にテクノロジーごとのカードを並べる構成になっています。
+SF 作品に出てくるテクノロジーが、いまどれくらい現実に近いか。それを 0〜100 の「実現度」で見せる、[sf-meter-api](https://github.com/nemdull/sf-meter-api) の画面です。
 
-## 画面構成 (2025-02 時点)
+- API: [sf-meter-api](https://github.com/nemdull/sf-meter-api)（Go）
+- 全体の入り口: [sf-meter](https://github.com/nemdull/sf-meter)
+- 作った人: [nemdull.com](https://www.nemdull.com/)
 
-- 画面上部に `SF Meter` のヘッダーを固定表示。
-- 中央に技術カード (`TechCard`) を 1 件表示。  
-  - カードには名前・説明・実現度スコアを表示し、Chakra UI の `Progress` コンポーネント (namespace API) でメーターを描画。
-- 全体を暗色系の背景 & 角丸カードで統一。
+## できること
 
-## 開発環境
+- 大きな計器が、選んだ技術の実現度を針で指す。「ほかの技術を引く」で、どれか 1 件を引ける
+- 名前や説明で探す、段階（まだ SF／研究中／ほぼ現実）で絞る、並び順を変える。カードは、新しい場所まで動いて並び直す
+- 絞り込んだ状態は URL に残るので、そのまま人に渡せる（例: `?level=reality&sort=name`）
+- **API につながらなくても止まらない。** 同梱のサンプルデータに切り替えて、同じ条件で同じ結果を出す。画面の右上に、いまどちらのデータかが出る
+- 端末の「動きを減らす」設定がオンなら、針やカードの動きを止める
 
-- React 19 + TypeScript + Vite
-- Chakra UI v3 (`@chakra-ui/react`), Emotion, Framer Motion
-
-### セットアップ
+## 動かす
 
 ```bash
 npm install
+npm run dev        # http://localhost:5173
 ```
 
-### 開発サーバー
+API も一緒に動かすと、本物のデータになります。別のターミナルで:
 
 ```bash
-npm run dev
+# sf-meter-api のフォルダで
+go run .           # http://localhost:8080
 ```
 
-### ビルド
+開発サーバーは、`/api` へのリクエストを `http://localhost:8080` へ中継します（`vite.config.ts`）。API を起こしていなければ、自動でサンプルデータになります。
 
-```bash
-npm run build
-```
+| コマンド | すること |
+| --- | --- |
+| `npm run dev` | 開発サーバー |
+| `npm test` | テスト（Vitest） |
+| `npm run lint` | ESLint |
+| `npm run build` | 型チェックとビルド |
+| `npm run preview` | ビルド結果の確認 |
 
-*Node.js 22.11.0 でビルドすると Vite から警告が出るため、22.12 以上または 20.19 以上を推奨。*
+Node.js は 22.12 以上、または 20.19 以上。
 
-## ディレクトリ構成 (主要部分)
+## API とのつなぎ方
+
+| 画面がやること | 呼ぶ API |
+| --- | --- |
+| 一覧（検索・絞り込み・並べ替え） | `GET /api/v1/techs?q=&min_score=&max_score=&sort=` |
+| 件数・平均・段階ごとの内訳 | `GET /api/v1/stats` |
+| ほかの技術を引く | `GET /api/v1/techs/random` |
+
+画面と API を別の場所に置くときは、`.env.example` を `.env.local` にコピーして `VITE_API_BASE_URL` を書きます。API 側の `CORS_ALLOWED_ORIGINS` に、画面の URL を足してください。
+
+画面だけを静的なホスティングに置いても動きます（その場合は、ずっとサンプルデータです）。
+
+## 構成
 
 ```
 src/
 ├─ app/
-│  └─ App.tsx              # グローバルなエントリーポイント
+│  ├─ App.tsx              # 入り口
+│  └─ theme.ts             # 色と書体（Chakra UI の system）
 ├─ pages/
 │  └─ home/
-│     └─ HomePage.tsx      # トップページの UI とデータ
+│     ├─ HomePage.tsx      # 画面の組み立てと、条件・選んだ技術の状態
+│     └─ useBoard.ts       # 一覧と集計の読み込み（入力の待ち合わせ・取り消し・つなぎ直し）
 ├─ shared/
-│  └─ ui/
-│     └─ molecules/
-│        └─ tech-card/
-│           ├─ TechCard.tsx
-│           └─ index.ts
-└─ main.tsx                 # ReactDOM ルート & プロバイダー
+│  ├─ api/techs.ts         # API の呼び出し。つながらなければサンプルデータに切り替える
+│  ├─ data/sample.ts       # サンプルデータ（API の初期データと同じ 15 件）
+│  ├─ lib/tech.ts          # 型と決まりごと（段階の区切り、絞り込み、並べ替え、集計、URL との行き来）
+│  └─ ui/molecules/
+│     ├─ meter/            # 針で示す計器（SVG）
+│     ├─ tech-card/        # 技術 1 件のカード
+│     ├─ level-bar/        # 段階ごとの件数の帯
+│     └─ source-badge/     # いまのデータが API かサンプルかの表示
+└─ main.tsx
 ```
 
-Atomic Design の考え方に合わせて UI コンポーネントは `shared/ui/molecules` 配下に配置し、ページ単位の構造は `pages/home` にまとめています。`app` ディレクトリはアプリケーションの初期化やグローバルレイアウトを担当する層です。
+`@/` は `src/` を指します（例: `import Meter from '@/shared/ui/molecules/meter'`）。
 
-TypeScript / Vite のパスエイリアスとして `@/` を `src/` に割り当てています。（例: `import TechCard from '@/shared/ui/molecules/tech-card'`）
+## テスト
 
-## 主なコンポーネント
+`src/shared/lib/tech.test.ts` で、絞り込み・並べ替え・集計・URL との行き来を確かめています。
 
-- `src/app/App.tsx`  
-  アプリ全体のエントリーポイントとして、ページを切り替える役割を担います。
-- `src/pages/home/HomePage.tsx`  
-  ヘッダーとメインエリアを構築し、ピックアップ技術カードを表示。
-- `src/shared/ui/molecules/tech-card/TechCard.tsx`  
-  テクノロジー情報を表示するカード。Progress コンポーネントの namespace API (`Progress.Root`, `Progress.Track`, `Progress.Range`) を使用。
+期待値は、API 側のテスト（sf-meter-api の `presentation/handler_test.go`）と同じにしてあります。API につながらないときにサンプルデータへ切り替えても、同じ条件なら同じ結果になる、というのを両方のリポジトリで確かめるためです。
 
-## 今後の TODO
+## 使っているもの
 
-- 複数カードの一覧表示やデータ管理。
-- スコアのバリエーションや色分け設定。
-- Node.js バージョンの更新とビルドサイズ最適化。
+React 19、TypeScript、Vite、Chakra UI v3、Framer Motion（カードの並び直しと、数字の動き）、Vitest。
+
+## ライセンス
+
+[MIT License](LICENSE)
