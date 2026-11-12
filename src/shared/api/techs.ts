@@ -20,16 +20,24 @@ const TIMEOUT_MS = 4000
 class ApiUnavailable extends Error {}
 
 async function getJSON(path: string, signal: AbortSignal): Promise<unknown> {
+  // 「呼び出し側の取り消し」と「時間切れ」のどちらでも止まるようにする。
+  // AbortSignal.any / AbortSignal.timeout は少し前のブラウザー（iOS 17.3 以前の Safari など）に無いので、自前で組む
+  const controller = new AbortController()
+  const cancel = () => controller.abort()
+  const timer = setTimeout(cancel, TIMEOUT_MS)
+  if (signal.aborted) cancel()
+  signal.addEventListener('abort', cancel, { once: true })
+
   let response: Response
   try {
-    response = await fetch(`${BASE}${path}`, {
-      signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]),
-      headers: { Accept: 'application/json' },
-    })
+    response = await fetch(`${BASE}${path}`, { signal: controller.signal, headers: { Accept: 'application/json' } })
   } catch (error) {
     // 呼び出し側が取り消したときは、そのまま伝える（サンプルデータには切り替えない）
     if (signal.aborted) throw error
     throw new ApiUnavailable('API に届かない')
+  } finally {
+    clearTimeout(timer)
+    signal.removeEventListener('abort', cancel)
   }
   // 静的なホスティングに画面だけ置いたときは、/api が 404 や HTML で返ってくる
   const type = response.headers.get('Content-Type') ?? ''
