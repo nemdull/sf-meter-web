@@ -30,3 +30,29 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  container:
+    name: コンテナ
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: ビルド
+        run: docker build -t sf-meter-web:ci .
+      - name: 起動して、画面が返ること
+        run: |
+          docker run -d --name web -p 8081:80 sf-meter-web:ci
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:8081/ -o index.html; then break; fi
+            sleep 1
+          done
+          grep -q "SF Meter" index.html
+          # 深いパスを直接開いても、画面の入り口が返ること
+          curl -fsS http://localhost:8081/some/deep/link | grep -q "SF Meter"
+          # API が居ないときの /api は失敗で返る（画面は、これを見てサンプルデータに切り替える）
+          status="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://localhost:8081/api/v1/stats || true)"
+          echo "API なしの /api の応答: $status"
+          test "$status" != "200"
+      - name: うまくいかなかったときの記録
+        if: failure()
+        run: docker logs web
