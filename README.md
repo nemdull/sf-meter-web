@@ -52,6 +52,15 @@ Node.js は 22.12 以上、または 20.19 以上。
 
 画面だけを静的なホスティングに置いても動きます（その場合は、ずっとサンプルデータです）。
 
+## コンテナで動かす
+
+```bash
+docker build -t sf-meter-web .
+docker run --rm -p 5173:80 sf-meter-web      # http://localhost:5173
+```
+
+中身は nginx で、ビルドした静的ファイルを配り、`/api` だけを `API_UPSTREAM`（既定は `http://api:8080`）へ中継します。API と DB も一緒に立ち上げるなら、[sf-meter](https://github.com/nemdull/sf-meter) の `docker compose up` が早いです。
+
 ## 構成
 
 ```
@@ -73,6 +82,8 @@ src/
 │     ├─ level-bar/        # 段階ごとの件数の帯
 │     └─ source-badge/     # いまのデータが API かサンプルかの表示
 └─ main.tsx
+nginx/default.conf.template   # コンテナで配るときの nginx の設定
+Dockerfile                    # ビルド → nginx
 ```
 
 `@/` は `src/` を指します（例: `import Meter from '@/shared/ui/molecules/meter'`）。

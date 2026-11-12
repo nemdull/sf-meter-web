@@ -1,0 +1,35 @@
+# コンテナの起動時に、環境変数 API_UPSTREAM を埋めてから使われる（nginx の公式イメージの仕組み）。
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Docker の内蔵 DNS。API の名前は、起動時ではなくリクエストが来たときに引く。
+    # こうしておくと、API が居なくても画面だけは立ち上がる（そのときは画面がサンプルデータに切り替える）
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    resolver_timeout 2s;
+    set $api_upstream "${API_UPSTREAM}";
+
+    # /api は、そのまま API へ中継する
+    location /api/ {
+        proxy_pass $api_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 3s;
+        proxy_read_timeout 10s;
+    }
+
+    # ファイル名にハッシュが入っているものは、長く覚えてもらってよい
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # それ以外は、画面の入り口を返す
+    location / {
+        add_header Cache-Control "no-cache";
+        try_files $uri /index.html;
+    }
+}
