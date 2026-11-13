@@ -1,0 +1,47 @@
+name: Pages
+
+# main が進むたびに、画面を組み立てて gh-pages ブランチへ置く（GitHub Pages がそこから配る）。
+# API は置かないので、公開された画面は同梱のサンプルデータで動く。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 公開は 1 本ずつ。新しい実行が始まったら、古い実行は止める
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  # gh-pages ブランチへ push するため
+  contents: write
+
+jobs:
+  publish:
+    name: 画面を組み立てて公開
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # 外部のアクションは、タグではなくコミットの番号で固定する
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # リポジトリ名の下（/sf-meter-web/）で配られるので、土台のパスを合わせる
+      - name: ビルド
+        run: npm run build -- --base=/sf-meter-web/
+      - name: gh-pages ブランチへ置く
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          # アンダースコアで始まるファイルも、そのまま配らせる
+          touch .nojekyll
+          git init --quiet --initial-branch=gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit --quiet --message "deploy ${GITHUB_SHA}"
+          git push --force --quiet "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
