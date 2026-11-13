@@ -2,6 +2,7 @@
 
 SF 作品に出てくるテクノロジーが、いまどれくらい現実に近いか。それを 0〜100 の「実現度」で見せる、[sf-meter-api](https://github.com/nemdull/sf-meter-api) の画面です。
 
+- 動いているもの: [nemdull.github.io/sf-meter-web](https://nemdull.github.io/sf-meter-web/)（API は置いていないので、同梱のサンプルデータで動きます）
 - API: [sf-meter-api](https://github.com/nemdull/sf-meter-api)（Go）
 - 全体の入り口: [sf-meter](https://github.com/nemdull/sf-meter)
 - 作った人: [nemdull.com](https://www.nemdull.com/)
@@ -60,6 +61,12 @@ docker run --rm -p 5173:80 sf-meter-web      # http://localhost:5173
 ```
 
 中身は nginx で、ビルドした静的ファイルを配り、`/api` だけを `API_UPSTREAM`（既定は `http://api:8080`）へ中継します。API と DB も一緒に立ち上げるなら、[sf-meter](https://github.com/nemdull/sf-meter) の `docker compose up` が早いです。
+
+## 公開している画面
+
+main が進むたびに、GitHub Actions が画面を組み立てて `gh-pages` ブランチへ置き、GitHub Pages が [nemdull.github.io/sf-meter-web](https://nemdull.github.io/sf-meter-web/) で配ります（[.github/workflows/pages.yml](.github/workflows/pages.yml)）。
+
+そこには API を置いていません。画面は `/api` に届かないことを確かめてから、同梱のサンプルデータに切り替えます。右上の表示が「サンプルデータ」になっていれば、その状態です。
 
 ## 構成
 
